@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const data = [
+const groundwaterData = [
   { day: "Mon", level: 32 },
   { day: "Tue", level: 31 },
   { day: "Wed", level: 30 },
@@ -20,12 +20,26 @@ const data = [
   { day: "Sun", level: 27 },
 ];
 
+const rainfallData = [
+  { month: "Jan", rain: 45 },
+  { month: "Feb", rain: 32 },
+  { month: "Mar", rain: 60 },
+  { month: "Apr", rain: 80 },
+  { month: "May", rain: 120 },
+];
+
 const sensors = [
   { id: "DWLR-01", location: "Well A", level: "29 m", status: "Normal" },
   { id: "DWLR-02", location: "Well B", level: "31 m", status: "Warning" },
   { id: "DWLR-03", location: "Well C", level: "34 m", status: "Critical" },
   { id: "DWLR-04", location: "Well D", level: "27 m", status: "Normal" },
 ];
+
+function statusColor(status) {
+  if (status === "Normal") return "bg-green-500 text-white";
+  if (status === "Warning") return "bg-yellow-500 text-white";
+  if (status === "Critical") return "bg-red-600 text-white";
+}
 
 export default function Dashboard() {
   return (
@@ -56,7 +70,7 @@ export default function Dashboard() {
 
       </div>
 
-      {/* WEEKLY TREND CHART */}
+      {/* GROUNDWATER TREND */}
 
       <div className="bg-white shadow p-6 rounded-xl">
         <h2 className="text-xl font-semibold mb-4">
@@ -64,7 +78,7 @@ export default function Dashboard() {
         </h2>
 
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
+          <LineChart data={groundwaterData}>
             <XAxis dataKey="day" />
             <YAxis />
             <Tooltip />
@@ -78,7 +92,7 @@ export default function Dashboard() {
         </ResponsiveContainer>
       </div>
 
-      {/* SENSOR MAP */}
+      {/* MAP */}
 
       <div className="mt-8 bg-white p-6 rounded-xl shadow">
         <h2 className="text-xl font-semibold mb-4">
@@ -91,6 +105,7 @@ export default function Dashboard() {
       {/* SENSOR TABLE */}
 
       <div className="mt-8 bg-white p-6 rounded-xl shadow">
+
         <h2 className="text-xl font-semibold mb-4">
           Sensor Monitoring Table
         </h2>
@@ -107,22 +122,63 @@ export default function Dashboard() {
           </thead>
 
           <tbody>
+
             {sensors.map((sensor, index) => (
               <tr key={index} className="text-center">
+
                 <td className="border p-2">{sensor.id}</td>
                 <td className="border p-2">{sensor.location}</td>
                 <td className="border p-2">{sensor.level}</td>
-                <td className="border p-2">{sensor.status}</td>
+
+                <td className="border p-2">
+
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm ${statusColor(
+                      sensor.status
+                    )}`}
+                  >
+                    {sensor.status}
+                  </span>
+
+                </td>
+
               </tr>
             ))}
+
           </tbody>
 
         </table>
+
       </div>
 
-      {/* ALERT PANEL */}
+      {/* RAINFALL */}
+
+      <div className="mt-8 bg-white shadow p-6 rounded-xl">
+
+        <h2 className="text-xl font-semibold mb-4">
+          Rainfall vs Groundwater Recharge
+        </h2>
+
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={rainfallData}>
+            <XAxis dataKey="month" />
+            <YAxis />
+            <Tooltip />
+            <Line
+              type="monotone"
+              dataKey="rain"
+              stroke="#16a34a"
+              strokeWidth={3}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+
+      </div>
+
+      {/* ALERTS */}
 
       <div className="mt-8 bg-yellow-100 p-6 rounded-xl">
+
         <h2 className="text-lg font-semibold mb-2">
           System Alerts
         </h2>
@@ -132,22 +188,25 @@ export default function Dashboard() {
           <li>Recharge rate declining this week</li>
           <li>2 sensors temporarily offline</li>
         </ul>
+
       </div>
 
       {/* ASSISTANT */}
 
       <div className="mt-8 bg-gray-100 p-6 rounded-xl">
+
         <h2 className="text-lg font-semibold">
           Friendly Water Assistant
         </h2>
 
         <p className="text-sm mt-2">
-          Hi! I'm Jarvis your friendly AI assistant. Ask me about groundwater trends and recharge levels.
+          Hi! I'm Jarvis your friendly assistant. Ask me about groundwater trends.
         </p>
 
         <button className="mt-4 bg-blue-600 text-white px-4 py-2 rounded">
           Open Chatbot
         </button>
+
       </div>
 
     </div>
