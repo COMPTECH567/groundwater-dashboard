@@ -1,236 +1,378 @@
 "use client";
 
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import Map from "./components/Map";
 import { useState } from "react";
+import dynamic from "next/dynamic";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ResponsiveContainer
+} from "recharts";
 
-const groundwaterData = [
-  { day: "Mon", level: 32 },
-  { day: "Tue", level: 31 },
-  { day: "Wed", level: 30 },
-  { day: "Thu", level: 29 },
-  { day: "Fri", level: 28 },
-  { day: "Sat", level: 27 },
-  { day: "Sun", level: 27 }
-];
-
-const rainfallData = [
-  { month: "Jan", value: 45 },
-  { month: "Feb", value: 32 },
-  { month: "Mar", value: 60 },
-  { month: "Apr", value: 78 },
-  { month: "May", value: 120 }
-];
-
-const sensors = [
-  { id: "DWLR-01", location: "Well A", level: "29 m", status: "Normal" },
-  { id: "DWLR-02", location: "Well B", level: "31 m", status: "Warning" },
-  { id: "DWLR-03", location: "Well C", level: "34 m", status: "Critical" }
-];
+const Map = dynamic(() => import("./components/Map"), { ssr: false });
 
 export default function Dashboard() {
 
-  const [messages,setMessages] = useState([
-    {role:"bot",text:"Hi!! 👋 How can I help you?"}
-  ])
+  const groundwaterData = [
+    { day: "Mon", level: 30 },
+    { day: "Tue", level: 29 },
+    { day: "Wed", level: 28 },
+    { day: "Thu", level: 28 },
+    { day: "Fri", level: 27 },
+    { day: "Sat", level: 27 },
+    { day: "Sun", level: 26 }
+  ];
 
-  const [input,setInput] = useState("");
+  const rainfallData = [
+    { day: "Mon", rain: 5 },
+    { day: "Tue", rain: 12 },
+    { day: "Wed", rain: 8 },
+    { day: "Thu", rain: 20 },
+    { day: "Fri", rain: 15 },
+    { day: "Sat", rain: 9 },
+    { day: "Sun", rain: 6 }
+  ];
 
-  function sendMessage(){
-    if(!input) return;
+  const sensors = [
+    { id: "GW-01", location: "North Sector", level: "28m", status: "Normal" },
+    { id: "GW-02", location: "Central Zone", level: "25m", status: "Warning" },
+    { id: "GW-03", location: "South Village", level: "23m", status: "Critical" },
+    { id: "GW-04", location: "Industrial Area", level: "27m", status: "Normal" }
+  ];
 
-    setMessages([...messages,
-      {role:"user",text:input},
-      {role:"bot",text:"This is a demo AI assistant for groundwater monitoring."}
-    ])
+  const alerts = [
+    "GW-03 groundwater dropped below safe level",
+    "Heavy rainfall expected tomorrow",
+    "Central zone water usage rising rapidly"
+  ];
 
-    setInput("")
+  const [chatOpen, setChatOpen] = useState(false);
+  const [messages, setMessages] = useState([
+    { role: "bot", text: "Hi!! How can I help you 👋" }
+  ]);
+  const [input, setInput] = useState("");
+
+  function sendMessage() {
+
+    if (!input) return;
+
+    const userMsg = { role: "user", text: input };
+
+    const botMsg = {
+      role: "bot",
+      text: "I can help with groundwater data, rainfall analytics, sensor alerts and water usage insights."
+    };
+
+    setMessages([...messages, userMsg, botMsg]);
+
+    setInput("");
+
   }
 
   return (
-    <div style={{padding:"30px",fontFamily:"Arial"}}>
 
-      <h1 style={{marginBottom:"20px"}}>
+    <div style={{ padding: 20, fontFamily: "Arial" }}>
+
+      <h1 style={{ marginBottom: 20 }}>
         District Groundwater Monitoring Dashboard
       </h1>
 
-      {/* STATS */}
+      {/* KPI CARDS */}
 
-      <div style={{display:"flex",gap:"20px",marginBottom:"25px"}}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4,1fr)",
+          gap: 15,
+          marginBottom: 25
+        }}
+      >
 
-        <div style={{background:"#dbeafe",padding:"20px",borderRadius:"10px",flex:1}}>
-          <h3>Active DWLR Sensors</h3>
-          <h1>24</h1>
-        </div>
+        <StatCard title="Active Sensors" value="24" color="#dbeafe" />
 
-        <div style={{background:"#d1fae5",padding:"20px",borderRadius:"10px",flex:1}}>
-          <h3>Average Water Level</h3>
-          <h1>28 m</h1>
-        </div>
+        <StatCard title="Average Water Level" value="28 m" color="#dcfce7" />
 
-        <div style={{background:"#fee2e2",padding:"20px",borderRadius:"10px",flex:1}}>
-          <h3>Critical Zones</h3>
-          <h1>3</h1>
-        </div>
+        <StatCard title="Critical Zones" value="3" color="#fee2e2" />
+
+        <StatCard title="Rainfall Today" value="12 mm" color="#e0f2fe" />
 
       </div>
 
-      {/* GROUNDWATER TREND */}
+      {/* CHART SECTION */}
 
-      <div style={{background:"#f8fafc",padding:"20px",borderRadius:"10px",marginBottom:"25px"}}>
-        <h2>Weekly Groundwater Level Trend</h2>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 20
+        }}
+      >
 
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={groundwaterData}>
-            <XAxis dataKey="day"/>
-            <YAxis/>
-            <Tooltip/>
-            <Line type="monotone" dataKey="level" stroke="#2563eb"/>
-          </LineChart>
-        </ResponsiveContainer>
+        <ChartCard title="Weekly Groundwater Level Trend">
+
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={groundwaterData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="day" />
+              <YAxis />
+              <Tooltip />
+              <Line
+                type="monotone"
+                dataKey="level"
+                stroke="#2563eb"
+                strokeWidth={3}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+
+        </ChartCard>
+
+        <ChartCard title="Weekly Rainfall Analysis">
+
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={rainfallData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="day" />
+              <YAxis />
+              <Tooltip />
+              <Line
+                type="monotone"
+                dataKey="rain"
+                stroke="#06b6d4"
+                strokeWidth={3}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+
+        </ChartCard>
 
       </div>
 
       {/* MAP */}
 
-      <div style={{background:"#f8fafc",padding:"20px",borderRadius:"10px",marginBottom:"25px"}}>
-        <h2>Groundwater Sensor Locations</h2>
-        <Map/>
+      <div style={{ marginTop: 25 }}>
+        <ChartCard title="Groundwater Sensor Locations">
+          <Map />
+        </ChartCard>
       </div>
 
       {/* SENSOR TABLE */}
 
-      <div style={{background:"#f8fafc",padding:"20px",borderRadius:"10px",marginBottom:"25px"}}>
+      <div style={{ marginTop: 25 }}>
 
-        <h2>Sensor Monitoring Table</h2>
+        <ChartCard title="Sensor Monitoring Table">
 
-        <table style={{width:"100%",borderCollapse:"collapse"}}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              textAlign: "center"
+            }}
+          >
 
-          <thead>
-            <tr style={{background:"#e5e7eb"}}>
-              <th>Sensor ID</th>
-              <th>Location</th>
-              <th>Water Level</th>
-              <th>Status</th>
-            </tr>
-          </thead>
+            <thead>
 
-          <tbody>
-
-            {sensors.map((s)=>(
-              <tr key={s.id}>
-
-                <td style={{padding:"10px"}}>{s.id}</td>
-                <td>{s.location}</td>
-                <td>{s.level}</td>
-                <td>
-
-                  <span style={{
-                    padding:"6px 12px",
-                    borderRadius:"15px",
-                    background:
-                      s.status==="Normal"?"#22c55e":
-                      s.status==="Warning"?"#f59e0b":
-                      "#ef4444",
-                    color:"white"
-                  }}>
-                    {s.status}
-                  </span>
-
-                </td>
-
+              <tr style={{ background: "#f3f4f6" }}>
+                <th>ID</th>
+                <th>Location</th>
+                <th>Water Level</th>
+                <th>Status</th>
               </tr>
-            ))}
 
-          </tbody>
+            </thead>
 
-        </table>
+            <tbody>
 
-      </div>
+              {sensors.map((sensor, index) => (
 
-      {/* RAINFALL CHART */}
+                <tr key={index}>
 
-      <div style={{background:"#f8fafc",padding:"20px",borderRadius:"10px",marginBottom:"25px"}}>
+                  <td>{sensor.id}</td>
 
-        <h2>Rainfall vs Groundwater Recharge</h2>
+                  <td>{sensor.location}</td>
 
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={rainfallData}>
-            <XAxis dataKey="month"/>
-            <YAxis/>
-            <Tooltip/>
-            <Line type="monotone" dataKey="value" stroke="#16a34a"/>
-          </LineChart>
-        </ResponsiveContainer>
+                  <td>{sensor.level}</td>
+
+                  <td
+                    style={{
+                      color:
+                        sensor.status === "Normal"
+                          ? "green"
+                          : sensor.status === "Warning"
+                          ? "orange"
+                          : "red"
+                    }}
+                  >
+                    {sensor.status}
+                  </td>
+
+                </tr>
+
+              ))}
+
+            </tbody>
+
+          </table>
+
+        </ChartCard>
 
       </div>
 
       {/* ALERTS */}
 
-      <div style={{
-        background:"#fef9c3",
-        padding:"20px",
-        borderRadius:"10px",
-        marginBottom:"25px"
-      }}>
+      <div style={{ marginTop: 25 }}>
 
-        <h2>System Alerts</h2>
+        <ChartCard title="System Alerts">
 
-        <ul>
-          <li>Groundwater level dropping in Zone 3</li>
-          <li>Recharge rate declining this week</li>
-          <li>2 sensors temporarily offline</li>
-        </ul>
+          <ul>
+
+            {alerts.map((alert, i) => (
+
+              <li key={i}>{alert}</li>
+
+            ))}
+
+          </ul>
+
+        </ChartCard>
 
       </div>
 
       {/* AI CHATBOT */}
 
-      <div style={{
-        position:"fixed",
-        bottom:"20px",
-        right:"20px",
-        width:"320px",
-        background:"white",
-        border:"1px solid #ddd",
-        borderRadius:"10px",
-        boxShadow:"0 5px 20px rgba(0,0,0,0.2)",
-        padding:"15px"
-      }}>
+      <div
+        style={{
+          position: "fixed",
+          bottom: 20,
+          right: 20
+        }}
+      >
 
-        <div style={{fontWeight:"bold",marginBottom:"10px"}}>
-          AI Water Assistant
-        </div>
+        <button
+          onClick={() => setChatOpen(!chatOpen)}
+          style={{
+            background: "#2563eb",
+            color: "white",
+            padding: "10px 15px",
+            borderRadius: 8,
+            border: "none"
+          }}
+        >
+          AI Assistant
+        </button>
 
-        <div style={{height:"200px",overflowY:"auto",marginBottom:"10px"}}>
+        {chatOpen && (
 
-          {messages.map((m,i)=>(
-            <div key={i} style={{
-              textAlign:m.role==="user"?"right":"left",
-              marginBottom:"8px"
-            }}>
-              {m.text}
+          <div
+            style={{
+              width: 300,
+              height: 350,
+              background: "white",
+              border: "1px solid #ddd",
+              marginTop: 10,
+              display: "flex",
+              flexDirection: "column"
+            }}
+          >
+
+            <div
+              style={{
+                background: "#2563eb",
+                color: "white",
+                padding: 10
+              }}
+            >
+              Water Monitoring AI
             </div>
-          ))}
 
-        </div>
+            <div
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                padding: 10
+              }}
+            >
 
-        <div style={{display:"flex",gap:"5px"}}>
+              {messages.map((msg, i) => (
 
-          <input
-            value={input}
-            onChange={(e)=>setInput(e.target.value)}
-            style={{flex:1,padding:"6px"}}
-          />
+                <div
+                  key={i}
+                  style={{
+                    textAlign: msg.role === "user" ? "right" : "left",
+                    marginBottom: 8
+                  }}
+                >
+                  {msg.text}
+                </div>
 
-          <button onClick={sendMessage}>
-            Send
-          </button>
+              ))}
 
-        </div>
+            </div>
+
+            <div style={{ display: "flex", padding: 10 }}>
+
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                style={{ flex: 1, padding: 6 }}
+              />
+
+              <button
+                onClick={sendMessage}
+                style={{ marginLeft: 5 }}
+              >
+                Send
+              </button>
+
+            </div>
+
+          </div>
+
+        )}
 
       </div>
 
     </div>
-  )
+  );
+}
+
+/* COMPONENTS */
+
+function StatCard({ title, value, color }) {
+
+  return (
+    <div
+      style={{
+        background: color,
+        padding: 20,
+        borderRadius: 10
+      }}
+    >
+      <h3>{title}</h3>
+      <h2>{value}</h2>
+    </div>
+  );
+
+}
+
+function ChartCard({ title, children }) {
+
+  return (
+    <div
+      style={{
+        border: "1px solid #e5e7eb",
+        borderRadius: 10,
+        padding: 20
+      }}
+    >
+      <h3 style={{ marginBottom: 10 }}>{title}</h3>
+
+      {children}
+
+    </div>
+  );
+
 }
