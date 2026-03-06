@@ -1,48 +1,115 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-import { useEffect } from "react";
 
 export default function MapInner() {
 
-  useEffect(() => {
-    delete L.Icon.Default.prototype._getIconUrl;
+const sensors = [
 
-    L.Icon.Default.mergeOptions({
-      iconRetinaUrl:
-        "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
-      iconUrl:
-        "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-      shadowUrl:
-        "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-    });
-  }, []);
+{
+id:"DWLR-01",
+position:[9.9312,76.2673],
+status:"normal"
+},
 
-  return (
-    <MapContainer
-      center={[10.8505, 76.2711]}
-      zoom={7}
-      style={{ height: "400px", width: "100%" }}
-    >
-      <TileLayer
-        attribution="&copy; OpenStreetMap contributors"
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+{
+id:"DWLR-02",
+position:[9.98,76.29],
+status:"warning"
+},
 
-      <Marker position={[10.8505, 76.2711]}>
-        <Popup>DWLR Sensor 1</Popup>
-      </Marker>
+{
+id:"DWLR-03",
+position:[10.01,76.31],
+status:"critical"
+},
 
-      <Marker position={[9.9312, 76.2673]}>
-        <Popup>DWLR Sensor 2</Popup>
-      </Marker>
+{
+id:"DWLR-04",
+position:[9.95,76.28],
+status:"normal"
+}
 
-      <Marker position={[11.2588, 75.7804]}>
-        <Popup>DWLR Sensor 3</Popup>
-      </Marker>
+];
 
-    </MapContainer>
-  );
+
+const zones = [
+
+{
+center:[9.95,76.25],
+radius:20000,
+color:"green"
+},
+
+{
+center:[9.99,76.30],
+radius:20000,
+color:"orange"
+},
+
+{
+center:[10.03,76.33],
+radius:20000,
+color:"red"
+}
+
+];
+
+
+return(
+
+<MapContainer
+center={[9.97,76.29]}
+zoom={8}
+style={{height:"420px"}}
+>
+
+<TileLayer
+url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+/>
+
+
+{/* HEATMAP ZONES */}
+
+{zones.map((zone,i)=>(
+
+<Circle
+key={i}
+center={zone.center}
+radius={zone.radius}
+pathOptions={{
+color:zone.color,
+fillColor:zone.color,
+fillOpacity:0.25
+}}
+/>
+
+))}
+
+
+{/* SENSOR MARKERS */}
+
+{sensors.map((sensor,i)=>(
+
+<Marker key={i} position={sensor.position}>
+
+<Popup>
+
+<b>{sensor.id}</b>
+
+<br/>
+
+Status: {sensor.status}
+
+</Popup>
+
+</Marker>
+
+))}
+
+</MapContainer>
+
+);
+
 }

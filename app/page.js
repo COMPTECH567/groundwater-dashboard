@@ -1,6 +1,9 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import Map from "./components/Map";
+import GaugeChart from "react-gauge-chart";
+
 import {
   LineChart,
   Line,
@@ -8,207 +11,359 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  CartesianGrid,
+  BarChart,
+  Bar,
+  Legend
 } from "recharts";
 
-const groundwaterData = [
-  { day: "Mon", level: 32 },
-  { day: "Tue", level: 31 },
-  { day: "Wed", level: 30 },
-  { day: "Thu", level: 29 },
-  { day: "Fri", level: 28 },
-  { day: "Sat", level: 27 },
-  { day: "Sun", level: 27 },
+export default function Dashboard() {
+
+const [time,setTime] = useState("");
+const [chatOpen,setChatOpen] = useState(false);
+const [input,setInput] = useState("");
+
+const chatEndRef = useRef(null);
+
+const [messages,setMessages] = useState([
+{
+sender:"ai",
+text:"Hello! I'm AquaAI. Ask me about groundwater levels, sensors, or recharge trends."
+}
+]);
+
+const [weeklyData,setWeeklyData] = useState([
+{ day:"Mon", level:32 },
+{ day:"Tue", level:31 },
+{ day:"Wed", level:30 },
+{ day:"Thu", level:29 },
+{ day:"Fri", level:28 },
+{ day:"Sat", level:27 },
+{ day:"Sun", level:27 }
+]);
+
+const rainfallData=[
+{month:"Jan",rain:120,ground:30},
+{month:"Feb",rain:90,ground:28},
+{month:"Mar",rain:60,ground:26},
+{month:"Apr",rain:40,ground:25},
+{month:"May",rain:20,ground:24},
+{month:"Jun",rain:140,ground:29}
 ];
 
-const rainfallData = [
-  { month: "Jan", rain: 45 },
-  { month: "Feb", rain: 32 },
-  { month: "Mar", rain: 60 },
-  { month: "Apr", rain: 80 },
-  { month: "May", rain: 120 },
-];
+useEffect(()=>{
 
-const sensors = [
-  { id: "DWLR-01", location: "Well A", level: "29 m", status: "Normal" },
-  { id: "DWLR-02", location: "Well B", level: "31 m", status: "Warning" },
-  { id: "DWLR-03", location: "Well C", level: "34 m", status: "Critical" },
-  { id: "DWLR-04", location: "Well D", level: "27 m", status: "Normal" },
-];
+const interval=setInterval(()=>{
 
-function statusColor(status) {
-  if (status === "Normal") return "bg-green-500 text-white";
-  if (status === "Warning") return "bg-yellow-500 text-white";
-  if (status === "Critical") return "bg-red-600 text-white";
+const now=new Date();
+setTime(now.toLocaleTimeString());
+
+setWeeklyData(prev =>
+prev.map(item=>({
+...item,
+level:item.level+(Math.random()*0.4-0.2)
+}))
+);
+
+},4000);
+
+return ()=>clearInterval(interval);
+
+},[]);
+
+useEffect(()=>{
+chatEndRef.current?.scrollIntoView({behavior:"smooth"});
+},[messages]);
+
+function sendMessage(){
+
+if(!input.trim()) return;
+
+const userMsg={sender:"user",text:input};
+
+let reply="";
+const text=input.toLowerCase();
+
+if(text.includes("water")){
+reply="District groundwater average level is approximately 28 meters.";
+}
+else if(text.includes("sensor")){
+reply="24 DWLR monitoring sensors are currently active.";
+}
+else if(text.includes("rain")){
+reply="Recent rainfall trends indicate moderate groundwater recharge.";
+}
+else if(text.includes("critical")){
+reply="Three groundwater monitoring zones are currently critical.";
+}
+else{
+reply="I can provide insights on groundwater levels, rainfall recharge, sensors, and alerts.";
 }
 
-export default function Dashboard() {
-  return (
-    <div className="p-10 bg-gray-100 min-h-screen">
+setMessages(prev=>[
+...prev,
+userMsg,
+{sender:"ai",text:reply}
+]);
 
-      <h1 className="text-3xl font-bold mb-8">
-        District Groundwater Monitoring Dashboard
-      </h1>
+setInput("");
 
-      {/* KPI CARDS */}
+}
 
-      <div className="grid grid-cols-3 gap-6 mb-8">
+return(
 
-        <div className="bg-blue-100 p-6 rounded-xl">
-          <h2 className="text-lg font-semibold">Active DWLR Sensors</h2>
-          <p className="text-4xl mt-2">24</p>
-        </div>
+<div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
 
-        <div className="bg-green-100 p-6 rounded-xl">
-          <h2 className="text-lg font-semibold">Average Water Level</h2>
-          <p className="text-4xl mt-2">28 m</p>
-        </div>
+{/* SIDEBAR */}
 
-        <div className="bg-red-100 p-6 rounded-xl">
-          <h2 className="text-lg font-semibold">Critical Zones</h2>
-          <p className="text-4xl mt-2">3</p>
-        </div>
+<div className="w-64 bg-blue-900 text-white p-6 shadow-xl">
 
-      </div>
+<h2 className="text-2xl font-bold mb-8">
+💧 Jal Monitoring
+</h2>
 
-      {/* GROUNDWATER TREND */}
+<ul className="space-y-4 text-sm">
+<li>📊 Dashboard</li>
+<li>📡 Sensor Network</li>
+<li>📈 Groundwater Trends</li>
+<li>🌧 Recharge Monitoring</li>
+<li>⚠ Alerts</li>
+</ul>
 
-      <div className="bg-white shadow p-6 rounded-xl">
-        <h2 className="text-xl font-semibold mb-4">
-          Weekly Groundwater Level Trend
-        </h2>
+</div>
 
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={groundwaterData}>
-            <XAxis dataKey="day" />
-            <YAxis />
-            <Tooltip />
-            <Line
-              type="monotone"
-              dataKey="level"
-              stroke="#2563eb"
-              strokeWidth={3}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+{/* MAIN */}
 
-      {/* MAP */}
+<div className="flex-1 p-10">
 
-      <div className="mt-8 bg-white p-6 rounded-xl shadow">
-        <h2 className="text-xl font-semibold mb-4">
-          Groundwater Sensor Locations
-        </h2>
+{/* HEADER */}
 
-        <Map />
-      </div>
+<div className="flex justify-between items-center mb-6">
 
-      {/* SENSOR TABLE */}
+<h1 className="text-3xl font-bold text-blue-900">
+Smart Groundwater Monitoring System
+</h1>
 
-      <div className="mt-8 bg-white p-6 rounded-xl shadow">
+<div className="flex gap-6 items-center">
 
-        <h2 className="text-xl font-semibold mb-4">
-          Sensor Monitoring Table
-        </h2>
+<div className="text-gray-600">
+⏰ {time}
+</div>
 
-        <table className="w-full border border-gray-300">
+<div className="bg-green-500 text-white px-4 py-1 rounded-full text-sm">
+System Online
+</div>
 
-          <thead className="bg-gray-200">
-            <tr>
-              <th className="p-2 border">Sensor ID</th>
-              <th className="p-2 border">Location</th>
-              <th className="p-2 border">Water Level</th>
-              <th className="p-2 border">Status</th>
-            </tr>
-          </thead>
+</div>
 
-          <tbody>
+</div>
 
-            {sensors.map((sensor, index) => (
-              <tr key={index} className="text-center">
+{/* KPI */}
 
-                <td className="border p-2">{sensor.id}</td>
-                <td className="border p-2">{sensor.location}</td>
-                <td className="border p-2">{sensor.level}</td>
+<div className="grid grid-cols-4 gap-6 mb-8">
 
-                <td className="border p-2">
+<div className="bg-white p-6 rounded-xl shadow border-l-4 border-blue-500">
+<div className="text-sm text-gray-500">Active Sensors</div>
+<p className="text-3xl font-bold text-blue-700">24</p>
+</div>
 
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm ${statusColor(
-                      sensor.status
-                    )}`}
-                  >
-                    {sensor.status}
-                  </span>
+<div className="bg-white p-6 rounded-xl shadow border-l-4 border-green-500">
+<div className="text-sm text-gray-500">Average Water Level</div>
+<p className="text-3xl font-bold text-green-700">28 m</p>
+</div>
 
-                </td>
+<div className="bg-white p-6 rounded-xl shadow border-l-4 border-red-500">
+<div className="text-sm text-gray-500">Critical Zones</div>
+<p className="text-3xl font-bold text-red-600 animate-pulse">3</p>
+</div>
 
-              </tr>
-            ))}
+<div className="bg-white p-6 rounded-xl shadow border-l-4 border-yellow-500">
+<div className="text-sm text-gray-500">Warning Zones</div>
+<p className="text-3xl font-bold text-yellow-600">5</p>
+</div>
 
-          </tbody>
+</div>
 
-        </table>
+{/* GAUGE + TREND */}
 
-      </div>
+<div className="grid grid-cols-2 gap-8 mb-8">
 
-      {/* RAINFALL */}
+<div className="bg-white shadow p-6 rounded-xl">
 
-      <div className="mt-8 bg-white shadow p-6 rounded-xl">
+<h2 className="text-xl font-semibold mb-4 text-blue-900">
+District Water Stress Index
+</h2>
 
-        <h2 className="text-xl font-semibold mb-4">
-          Rainfall vs Groundwater Recharge
-        </h2>
+<GaugeChart
+id="gauge-chart"
+nrOfLevels={3}
+colors={["#16a34a","#eab308","#dc2626"]}
+percent={0.65}
+/>
 
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={rainfallData}>
-            <XAxis dataKey="month" />
-            <YAxis />
-            <Tooltip />
-            <Line
-              type="monotone"
-              dataKey="rain"
-              stroke="#16a34a"
-              strokeWidth={3}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+</div>
 
-      </div>
+<div className="bg-white shadow p-6 rounded-xl">
 
-      {/* ALERTS */}
+<h2 className="text-xl font-semibold mb-4 text-blue-900">
+Weekly Groundwater Trend
+</h2>
 
-      <div className="mt-8 bg-yellow-100 p-6 rounded-xl">
+<ResponsiveContainer width="100%" height={260}>
 
-        <h2 className="text-lg font-semibold mb-2">
-          System Alerts
-        </h2>
+<LineChart data={weeklyData}>
+<CartesianGrid strokeDasharray="3 3"/>
+<XAxis dataKey="day"/>
+<YAxis/>
+<Tooltip/>
 
-        <ul className="list-disc ml-6">
-          <li>Groundwater level dropping in Zone 3</li>
-          <li>Recharge rate declining this week</li>
-          <li>2 sensors temporarily offline</li>
-        </ul>
+<Line
+type="monotone"
+dataKey="level"
+stroke="#2563eb"
+strokeWidth={3}
+/>
 
-      </div>
+</LineChart>
 
-      {/* ASSISTANT */}
+</ResponsiveContainer>
 
-      <div className="mt-8 bg-gray-100 p-6 rounded-xl">
+</div>
 
-        <h2 className="text-lg font-semibold">
-          Friendly Water Assistant
-        </h2>
+</div>
 
-        <p className="text-sm mt-2">
-          Hi! I'm Jarvis your friendly assistant. Ask me about groundwater trends.
-        </p>
+{/* RAINFALL */}
 
-        <button className="mt-4 bg-blue-600 text-white px-4 py-2 rounded">
-          Open Chatbot
-        </button>
+<div className="bg-white shadow p-6 rounded-xl mb-8">
 
-      </div>
+<h2 className="text-xl font-semibold mb-4 text-blue-900">
+Rainfall vs Groundwater Recharge
+</h2>
 
-    </div>
-  );
+<ResponsiveContainer width="100%" height={300}>
+
+<BarChart data={rainfallData}>
+<CartesianGrid strokeDasharray="3 3"/>
+<XAxis dataKey="month"/>
+<YAxis/>
+<Tooltip/>
+<Legend/>
+
+<Bar dataKey="rain" fill="#38bdf8"/>
+<Bar dataKey="ground" fill="#22c55e"/>
+
+</BarChart>
+
+</ResponsiveContainer>
+
+</div>
+
+{/* MAP */}
+
+<div className="bg-white shadow p-6 rounded-xl mb-8">
+
+<h2 className="text-xl font-semibold mb-4 text-blue-900">
+Groundwater Monitoring Map
+</h2>
+
+<Map/>
+
+</div>
+
+{/* ALERT */}
+
+<div className="bg-yellow-100 border-l-4 border-yellow-500 p-6 rounded-xl">
+
+<h2 className="text-xl font-semibold mb-3">
+⚠ System Alerts
+</h2>
+
+<ul className="list-disc ml-6 space-y-1">
+<li>Groundwater level dropping in Zone 3</li>
+<li>Recharge rate declining this week</li>
+<li>Sensor DWLR-03 reporting abnormal drop</li>
+</ul>
+
+</div>
+
+</div>
+
+{/* CHATBOT */}
+
+<div className="fixed bottom-6 right-6 flex items-center gap-3">
+
+{/* Animated helper text */}
+
+<div className="bg-white text-gray-700 text-sm px-4 py-2 rounded-lg shadow animate-bounce flex items-center gap-2">
+
+<span>👋</span>
+<span>Hi! How can I help you?</span>
+
+</div>
+
+{/* Chat button */}
+
+<button
+onClick={()=>setChatOpen(!chatOpen)}
+className="bg-blue-600 text-white p-4 rounded-full shadow-lg animate-pulse"
+>
+💬
+</button>
+
+{chatOpen && (
+
+<div className="absolute bottom-16 right-0 w-80 h-96 bg-white rounded-xl shadow-xl flex flex-col">
+
+<div className="bg-blue-600 text-white p-3 rounded-t-xl font-semibold">
+AquaAI Assistant
+</div>
+
+<div className="flex-1 p-3 overflow-y-auto text-sm">
+
+{messages.map((m,i)=>(
+<div key={i} className={`mb-2 ${m.sender==="user"?"text-right":""}`}>
+
+<span className={`inline-block px-3 py-2 rounded-lg ${
+m.sender==="user"
+?"bg-blue-500 text-white"
+:"bg-gray-200"
+}`}>
+{m.text}
+</span>
+
+</div>
+))}
+
+<div ref={chatEndRef}></div>
+
+</div>
+
+<div className="flex border-t">
+
+<input
+value={input}
+onChange={(e)=>setInput(e.target.value)}
+onKeyDown={(e)=>{if(e.key==="Enter")sendMessage();}}
+className="flex-1 p-2 text-sm outline-none"
+placeholder="Ask about groundwater..."
+/>
+
+<button
+onClick={sendMessage}
+className="bg-blue-600 text-white px-4"
+>
+Send
+</button>
+
+</div>
+
+</div>
+
+)}
+
+</div>
+
+</div>
+
+);
 }
